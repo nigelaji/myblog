@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="style.css">
+    <title>Content</title>
+</head>
+
+<body>
+
+    <h1>1</h1>
+    <h2>2</h2>
+    <h3>3</h3>
+    <h3>4</h3>
+    <h3>5</h3>
+    <h2>6</h2>
+    <h3>7</h3>
+    <h3>8</h3>
+    <h3>9</h3>
+    <h2>10</h2>
+    <h3>11</h3>
+    <h3>12</h3>
+    <h3>13</h3>
+    <h1>1</h1>
+    <h2>2</h2>
+    <h3>3</h3>
+    <h3>4</h3>
+    <h3>5</h3>
+    <h2>6</h2>
+    <h3>7</h3>
+    <h3>8</h3>
+    <h3>9</h3>
+    <h2>10</h2>
+    <h3>11</h3>
+    <h3>12</h3>
+    <h3>13</h3>
+
+
+    <script>
+        function move(target) {
+
+        }
+
+        function set_width(parent, value) {
+            let childs = parent.childNodes;
+            for (let i in childs) {
+                if (childs[i].localName == 'li') {
+                    let childs_li = childs[i].childNodes;
+                    for (let k in childs_li) {
+                        if (childs_li[k].localName == 'span') {
+                            childs_li[k].style.width = value + 'px';
+                        }
+                    }
+                }
+            }
+        }
+
+        function get_node(text) {
+            let li = document.createElement('li');
+            let span = document.createElement('span');
+
+            span.className = 'cntent-title';
+            span.innerText = text;
+
+            //添加点击事件 点击隐藏或显示当前标签下的 ul标签
+            span.onclick = function() {
+                let ul = this.parentElement.getElementsByTagName('ul')[0];
+                let spans = this.parentElement.parentElement;
+                if (ul) {
+                    if (ul.style.display == 'none') {
+                        ul.style.display = 'block';
+                        this.style.width = '-webkit-fill-available';
+                        set_width(spans, this.offsetWidth);
+                        this.style.width = '-webkit-fill-available';
+                    } else {
+                        ul.style.display = 'none';
+                        set_width(spans, '100px');
+                    }
+                }
+            }
+            li.appendChild(span);
+
+            return li;
+        }
+
+        function genContent(l_list) {
+            let all_elements = document.body.childNodes;
+            let node_list = [];
+            let top_l = Infinity;
+            let container = document.createElement('div');
+            container.className = 'content-container';
+
+            for (let i = 0; i < all_elements.length; i++) {
+                let l = l_list.indexOf(all_elements[i].localName) + 1;
+                if (l > 0) {
+                    let text = all_elements[i].innerText;
+                    let node = get_node(text);
+
+                    if (top_l >= l) {
+                        top_l = l - 1;
+                        node_list[top_l] = container;
+                    }
+
+                    if (node_list[l + 1]) {
+                        node_list[l + 1] = undefined;
+                    }
+
+                    if (!node_list[l]) {
+                        let ul = document.createElement('ul');
+                        ul.style.display = (l - 1 == top_l ? 'block' : 'none');
+                        ul.appendChild(node);
+                        node_list[l - 1].appendChild(ul);
+                        node_list[l - 1] = ul;
+                        node_list[l] = node;
+                    } else {
+                        node_list[l - 1].appendChild(node);
+                        node_list[l] = node;
+                    }
+                }
+            }
+            console.log(container);
+            document.body.appendChild(container);
+            return container;
+        }
+
+        window.onload = function() {
+            genContent(['h1', 'h2', 'h3', 'h4']);
+        }
+    </script>
+</body>
+
+</html>

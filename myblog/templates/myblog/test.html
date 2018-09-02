@@ -1,0 +1,12 @@
+{% extends 'myblog/base.html' %}
+{% load static %}
+
+{% block title %}Test Markdown{% endblock %}
+
+{% block main %}
+      {{pagedata.content|safe}}
+{% endblock %}
+
+{% block script %}
+
+{% endblock %}

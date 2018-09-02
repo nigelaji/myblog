@@ -1,0 +1,29 @@
+{% extends 'myblog/base.html' %}
+
+{% block title %}Modify Article{% endblock %}
+
+{% block main %}
+
+<div class="row">
+    <div class="col">
+        <form action="{{pagedata.post.get_modify_url}}" method="post">
+            {% csrf_token %}
+            {% for filed in pagedata.form %}
+            <div class="row my-3">
+                <div class="col">
+                    {{filed.label}}
+                    {{filed}}
+                </div>
+            </div>
+            {% endfor %}
+            <input type="hidden" name="key" value="{{pagedata.post.key}}">
+            <div class="row my-3">
+                <div class="col">
+                    <button type="submit">提交</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

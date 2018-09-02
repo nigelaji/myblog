@@ -1,0 +1,56 @@
+{% extends 'myblog/base.html' %}
+
+{% block title %}Post List{% endblock %}
+
+{% block style %}
+<style>
+    .add-article{
+        width: 100px;
+        height: 100px;
+        border: #1b1e21 1px solid;
+        border-radius: 50%;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        position: fixed;
+
+        right: 50px;
+        bottom: 50px;
+    }
+</style>
+{% endblock %}
+
+
+
+{% block main %}
+
+<ul class="list-unstyled">
+{% for post in pagedata.post_list %}
+<li>
+    <div class="row">
+        <div class="col-lg-10">
+            <h1><a href="{{post.get_absolute_url}}">{{post.title}}</a></h1>
+            <span class="d-block">{{post.tags}}</span>
+            <span class="d-block">{{post.get_format_date}}</span>
+            <p>{{post.get_brief_content}}</p>
+        </div>
+        <div class="col-lg-2">
+            <div class="row">
+                <div class="col text-info"><a href="{{post.get_modify_url}}">修改</a></div>
+            </div>
+            <div class="row">
+                <div class="col"><a class="text-danger" href="{{post.get_delete_url}}">删除</a></div>
+            </div>
+        </div>
+    </div>
+</li>
+{% endfor %}
+ </ul>
+
+<div class="add-article">
+    <a class="text-success" href="{% url 'addArticle' %}">添加文章</a>
+</div>
+
+{% endblock %}

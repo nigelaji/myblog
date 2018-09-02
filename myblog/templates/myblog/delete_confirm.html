@@ -1,0 +1,17 @@
+{% extends 'myblog/base.html' %}
+
+{% block title %}Delete Confiirm{% endblock %}
+
+{% block main%}
+
+<div class="row">
+    <div class="col">
+        <form action="{{pagedata.post.get_delete_url}}" method="post">
+            {% csrf_token %}
+            <span>确认删除--{{pagedata.post.title}}--吗？</span>
+            <button type="submit">确认</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

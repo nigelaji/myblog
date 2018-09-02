@@ -1,0 +1,18 @@
+{% extends 'myblog/base.html' %}
+
+{% block title %}Post Model{% endblock %}
+
+{% block main %}
+
+{% for post in pagedata.post_list %}
+<div class="row">
+    <div class="col">
+        <h1><a href="{{post.get_absolute_url}}">{{post.title}}</a></h1>
+        <span class="d-block">{{post.tags}}</span>
+        <span class="d-block">{{post.get_format_date}}</span>
+        <p>{{post.get_brief_content}}</p>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}

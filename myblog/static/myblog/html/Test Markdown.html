@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<!-- saved from url=(0040)https://m.geebos.cn/myblog/test/markdown -->
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="./Test Markdown_files/style.css">
+    <link rel="stylesheet" href="style.css">
+    <title>Test Markdown</title>
+
+</head>
+
+<body>
+
+
+    <div class="container">
+
+
+
+        <div id="container">
+            <hr>
+            <p>title: 实战：爬取简书之多线程爬取（一） date: 2018-07-18 19:32:56 tags: python爬虫系列</p>
+            <hr>
+            <p>在上上篇我们编写了一个简单的程序框架来爬取简书的文章信息，10分钟左右爬取了 1万 5千条数据。</p>
+            <p>现在，让我们先来做一个简单的算术题：</p>
+            <p>假设简书有活跃用户一千万人（不知道简书有多少活跃用户，我只能往小了算）</p>
+            <p>平均每人写了 15篇文章，那么一共有一亿五千万篇文章</p>
+            <p>我们10分钟爬取了 1万 5千篇，凑个整算 2万</p>
+            <p>那么爬取一亿五千万条数据需要 </p>
+            <div class="code">
+                <ol class="num-container">
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="1"></div>
+                    </div>
+                </ol>
+                <ol class="code-container">
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">150000000&nbsp;/&nbsp;20000&nbsp;=&nbsp;10&nbsp;*&nbsp;7500&nbsp;=&nbsp;75000&nbsp;min&nbsp;=&nbsp;1250&nbsp;h&nbsp;=&nbsp;52&nbsp;d</span></div>
+                        </div>
+                    </li>
+                </ol>
+                <div class="copy-btn" data-content="复制" style="display: none;"></div>
+            </div>
+
+            <p>w(ﾟДﾟ)w 52天！！！，如果按照前面的脚本来爬要爬整整 52天，那时候黄花菜都凉了呀。</p>
+            <p>这些数据的时间跨度如此大，如果要做数据分析的进行对比的话就会产生较大的误差。</p>
+            <p>所以，我们必须得提高爬取速度！！！</p>
+            <p>这时候就轮到今天得主角登场了，</p>
+            <p>噔 噔 噔 蹬------》多线程</p>
+            <h3>一、多线程简介</h3>
+            <p>简单来讲，多线程就相当于你原来开一个窗口爬取，现在开了10个窗口来爬取。</p>
+            <p>不计较数据的重复的话，现在的速度应该是之前的10倍，也就是说原来要52天才能爬完的数据现在只要5.2天了。</p>
+            <p>不过多线程和上面的例子还是有一些区别的</p>
+            <p>多线程是在一个窗口里同时运行十个线程，而上面的例子是同时打开十个窗口。</p>
+            <p>如果将数据比作货物的话，原来一个线程就相当于一个人在搬，十个线程就相当于十个人在搬</p>
+            <h3>二、多线程的简单使用</h3>
+            <p>threading是 python的标准库，可以直接导入使用</p>
+            <p>Thread类是 threading库的重点，我们使用要使用多线程都要通过这个类来使用</p>
+            <p>Thread一共有两种使用方法，第一种是直接传一个回调函数给 Thread类，这个回调函数可以有参数，但必须返回 <code>None</code>也就是不能有返回值。</p>
+            <p>第二种方法是继承 Thread类，然后重载 Thread类的 <code>__init__()</code>和 <code>run()</code>方法，第二种方法可以在实例初始化的时候向 run方法传递参数。</p>
+            <p>这两种方式可以互换，但是推荐使用第二种方法，因为这样更利于代码的组织，代码的可读性也更强。</p>
+            <p>下面我们就用代码来演示一下，Thread类的使用方法：
+                <strong>第一种：</strong></p>
+            <p>Thread的原型是：</p>
+            <div class="code">
+                <ol class="num-container">
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="1"></div>
+                    </div>
+                </ol>
+                <ol class="code-container">
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="">&nbsp;</span>
+                                <span class="n">target</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="">&nbsp;</span><span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                                <span class="">&nbsp;</span><span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="p">)</span><span class="p">,</span><span class="">&nbsp;</span><span class="n">kwargs</span><span class="o">=</span>
+                                <span class="p">{</span><span class="p">}</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                </ol>
+                <div class="copy-btn" data-content="复制" style="display: none;"></div>
+            </div>
+
+            <p>这里 group必须是 None，将回调函数传给 target，name是线程的名字默认是 ‘Thread-N’ N是一个数字。</p>
+            <p>args是要传递给回调函数的位置参数，kwargs是传递给回调函数的关键词参数。</p>
+            <p>第一种使用方法如下：</p>
+            <p>先定义一个函数，然后将函数和它所需的参数作为 Thread类的初始化参数得到一个 Thread实例，这个实例就是一个未开始的线程。</p>
+            <p>要启动这个线程，只需调用 <code>start()</code> 方法，然后调用 <code>join()</code>方法阻塞主线程。</p>
+            <p>为什么要调用 <code>join()</code>方法呢？</p>
+            <p>因为我们实例化的线程和主线程（也就是我们代码所在的线程）是分开的，那就有一个完成先后的问题。</p>
+            <p>如果我们实例化的线程先完成，那问题不大，但是要是主线程先完成了，那么正在运行的其他子线程会全部强行被停止</p>
+            <p>所以调用 <code>join()</code>方法阻塞主线程来保证所有的子线程全部完成，下面看代码示例：</p>
+            <p>在这个示例中我们用十个线程来访问我的首页 100次，并用 time库测试所用时间。</p>
+            <div class="code">
+                <ol class="num-container">
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="1"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="2"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="3"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="4"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="5"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="6"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="7"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="8"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="9"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="10"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="11"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="12"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="13"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="14"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="15"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="16"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="17"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="18"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="19"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="20"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="21"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="22"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="23"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="24"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="25"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="26"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="27"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="28"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="29"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="30"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="31"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="32"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="33"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="34"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="35"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="36"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="37"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="38"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="39"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="40"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="41"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="42"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="43"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="44"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="45"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="46"></div>
+                    </div>
+                </ol>
+                <ol class="code-container">
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#-*-&nbsp;coding:&nbsp;utf-8&nbsp;-*</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="kn">import</span><span class="">&nbsp;</span><span class="nn">threading</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="kn">import</span><span class="">&nbsp;</span><span class="nn">requests</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="kn">import</span><span class="">&nbsp;</span><span class="nn">time</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#&nbsp;定义回调函数</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="k">def</span><span class="">&nbsp;</span><span class="nf">getPage</span><span class="p">(</span><span class="n">url</span><span class="p">)</span><span class="p">:</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">headers</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="p">{</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="s1">'</span><span class="s1">User-Agent</span><span class="s1">'</span><span class="p">:</span><span class="">&nbsp;</span><span class="s1">'</span>
+                                <span class="s1">Mozilla/5.0&nbsp;(Windows&nbsp;NT&nbsp;10.0;&nbsp;WOW64)&nbsp;AppleWebKit/537.36&nbsp;(KHTML,&nbsp;like&nbsp;Gecko)&nbsp;Chrome/66.0.3359.117&nbsp;Safari/537.36</span><span class="s1">'</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="p">}</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="k">for</span><span class="">&nbsp;</span><span class="n">i</span><span class="">&nbsp;</span><span class="ow">in</span><span class="">&nbsp;</span><span class="nb">range</span>
+                                <span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="p">:</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">r</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="n">requests</span><span class="o">.</span>
+                                <span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span><span class="">&nbsp;</span><span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="n">url</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="s1">'</span><span class="s1">https://www.jianshu.com/u/472a595d244c</span><span class="s1">'</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#&nbsp;用来存放线程的列表</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="n">threads</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="p">[</span><span class="p">]</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#&nbsp;记录开始时间</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="n">start</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#&nbsp;添加十个线程到线程列表中</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="k">for</span><span class="">&nbsp;</span><span class="n">i</span><span class="">&nbsp;</span><span class="ow">in</span><span class="">&nbsp;</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span>
+                                <span class="p">)</span><span class="p">:</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c1">#&nbsp;向线程列表传递参数，通过&nbsp;kwargs向回调函数传递参数</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">t</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span>
+                                <span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">getPage</span><span class="p">,</span><span class="">&nbsp;</span><span class="n">name</span><span class="o">=</span><span class="n">f</span>
+                                <span class="s1">'</span><span class="s1">Thread&nbsp;{i}</span><span class="s1">'</span><span class="p">,</span><span class="">&nbsp;</span><span class="n">kwargs</span><span class="o">=</span><span class="p">{</span>
+                                <span class="s1">'</span>
+                                <span class="s1">url</span><span class="s1">'</span><span class="p">:</span><span class="n">url</span><span class="p">}</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c1">#&nbsp;通过&nbsp;args向回调函数传递参数,&nbsp;注意&nbsp;url后的逗号，</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c1">#&nbsp;args必须是一个元组</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c1">#&nbsp;t&nbsp;=&nbsp;threading.Thread(target=getPage,&nbsp;name=f'Thread&nbsp;{i}',&nbsp;args=(url,))</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">threads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#&nbsp;开启所有线程</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="k">for</span><span class="">&nbsp;</span><span class="n">t</span><span class="">&nbsp;</span><span class="ow">in</span><span class="">&nbsp;</span><span class="n">threads</span><span class="p">:</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#&nbsp;阻塞主线程，直到所有线程全部完成</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="k">for</span><span class="">&nbsp;</span><span class="n">t</span><span class="">&nbsp;</span><span class="ow">in</span><span class="">&nbsp;</span><span class="n">threads</span><span class="p">:</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#&nbsp;记录结束时间</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="n">end</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s1">'</span><span class="s1">多线程共用时&nbsp;{end&nbsp;-&nbsp;start}&nbsp;秒</span><span class="s1">'</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                </ol>
+                <div class="copy-btn" data-content="复制" style="display: none;"></div>
+            </div>
+
+            <p>十个线程访问一百次大概是 8.13秒</p>
+            <p>用普通的方法访问一百次的话，大概需要 60秒</p>
+            <p>前者平均每次访问耗时 0.08秒，而后者平均每次访问耗时 0.6秒，多线程差不多是普通方法的 8倍</p>
+            <p><strong>第二种：</strong></p>
+            <p>在使用之前我们得先定义一个 Thread类的子类：</p>
+            <div class="code">
+                <ol class="num-container">
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="1"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="2"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="3"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="4"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="5"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="6"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="7"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="8"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="9"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="10"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="11"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="12"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="13"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="14"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="15"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="16"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="17"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="18"></div>
+                    </div>
+                </ol>
+                <ol class="code-container">
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#&nbsp;定义一个子类并重载&nbsp;__init__()方法和&nbsp;run()方法</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="k">class</span><span class="">&nbsp;</span><span class="nc">testThread</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">)</span>
+                                <span class="p">:</span>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="k">def</span><span class="">&nbsp;</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="">&nbsp;</span>
+                                <span class="n">thread_name</span><span class="p">)</span><span class="p">:</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c1">#&nbsp;初始化时调用基类的初始化函数&nbsp;初始化基类</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                                <span class="bp">self</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c1">#&nbsp;将参数赋值作为&nbsp;self的属性&nbsp;这样就可以将参数通过&nbsp;self传递给&nbsp;run方法</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="bp">self</span><span class="o">.</span><span class="n">thread_name</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span>
+                                <span class="n">thread_name</span>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c1">#&nbsp;要在多线程里运行的函数</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="k">def</span><span class="">&nbsp;</span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="p">:</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">url</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="s1">'</span><span class="s1">https://www.jianshu.com/u/472a595d244c</span>
+                                <span class="s1">'</span>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">headers</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="p">{</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="s1">'</span><span class="s1">User-Agent</span><span class="s1">'</span><span class="p">:</span><span class="">&nbsp;</span><span class="s1">'</span>
+                                <span class="s1">Mozilla/5.0&nbsp;(Windows&nbsp;NT&nbsp;10.0;&nbsp;WOW64)&nbsp;AppleWebKit/537.36&nbsp;(KHTML,&nbsp;like&nbsp;Gecko)&nbsp;Chrome/66.0.3359.117&nbsp;Safari/537.36</span><span class="s1">'</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="p">}</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="k">for</span><span class="">&nbsp;</span><span class="n">i</span><span class="">&nbsp;</span><span class="ow">in</span><span class="">&nbsp;</span>
+                                <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="p">:</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">r</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="n">requests</span>
+                                <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span><span class="">&nbsp;</span><span class="n">headers</span><span class="o">=</span><span class="n">headers</span>
+                                <span class="p">)</span>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="">&nbsp;</span>
+                                <span class="s1">'</span><span class="s1">&nbsp;</span><span class="s1">'</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">thread_name</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                </ol>
+                <div class="copy-btn" data-content="复制" style="display: none;"></div>
+            </div>
+
+            <p>后面的使用方法就和第一种方法差不多了，只是传递的参数发生了一点变化：</p>
+            <div class="code">
+                <ol class="num-container">
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="1"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="2"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="3"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="4"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="5"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="6"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="7"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="8"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="9"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="10"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="11"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="12"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="13"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="14"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="15"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="16"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="17"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="18"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="19"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="20"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="21"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="22"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="23"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="24"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="25"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="26"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="27"></div>
+                    </div>
+                </ol>
+                <ol class="code-container">
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#&nbsp;主页链接</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="n">url</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="s1">'</span><span class="s1">https://www.jianshu.com/u/472a595d244c</span><span class="s1">'</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#&nbsp;用来存放线程的列表</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="n">threads</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="p">[</span><span class="p">]</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#&nbsp;记录开始时间</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="n">start</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#&nbsp;添加十个线程到线程列表中</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="k">for</span><span class="">&nbsp;</span><span class="n">i</span><span class="">&nbsp;</span><span class="ow">in</span><span class="">&nbsp;</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span>
+                                <span class="p">)</span><span class="p">:</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c1">#&nbsp;像使用普通类一样</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">t</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="n">testThread</span><span class="p">(</span><span class="n">url</span>
+                                <span class="p">)</span>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">threads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#&nbsp;开启所有线程</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="k">for</span><span class="">&nbsp;</span><span class="n">t</span><span class="">&nbsp;</span><span class="ow">in</span><span class="">&nbsp;</span><span class="n">threads</span><span class="p">:</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#&nbsp;阻塞主线程，直到所有线程全部完成</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="k">for</span><span class="">&nbsp;</span><span class="n">t</span><span class="">&nbsp;</span><span class="ow">in</span><span class="">&nbsp;</span><span class="n">threads</span><span class="p">:</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#&nbsp;记录结束时间</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="n">end</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s1">'</span><span class="s1">多线程共用时&nbsp;{end&nbsp;-&nbsp;start}&nbsp;秒</span><span class="s1">'</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                </ol>
+                <div class="copy-btn" data-content="复制"></div>
+            </div>
+
+            <p>这两种方法运行时间没有太大差别，但是第二种方可读性更强，所以推荐大家尽量使用第二种方法</p>
+            <h3>三、使用多线程需要注意的问题</h3>
+            <p>凡事都有两面性，虽然使用多线程速度更快，但是多线程也会带来一些问题，我们来看下面这个例子：</p>
+            <p>定义一个函数，这个函数会在控制台中打印 Hello World一次</p>
+            <p>现在我们用十个进程来同时执行它，看看输出的结果：</p>
+            <div class="code">
+                <ol class="num-container">
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="1"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="2"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="3"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="4"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="5"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="6"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="7"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="8"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="9"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="10"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="11"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="12"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="13"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="14"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="15"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="16"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="17"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="18"></div>
+                    </div>
+                </ol>
+                <ol class="code-container">
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="c1">#-*-&nbsp;coding:&nbsp;utf-8&nbsp;-*</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="kn">import</span><span class="">&nbsp;</span><span class="nn">threading</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="k">def</span><span class="">&nbsp;</span><span class="nf">print_hello_world</span><span class="p">(</span><span class="p">)</span><span class="p">:</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="k">print</span><span class="p">(</span><span class="s1">'</span><span class="s1">Hello&nbsp;World</span><span class="s1">'</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="n">threads</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="p">[</span><span class="p">]</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="k">for</span><span class="">&nbsp;</span><span class="n">i</span><span class="">&nbsp;</span><span class="ow">in</span><span class="">&nbsp;</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span>
+                                <span class="p">)</span><span class="p">:</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">t</span><span class="">&nbsp;</span><span class="o">=</span><span class="">&nbsp;</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span>
+                                <span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">print_hello_world</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">threads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="k">for</span><span class="">&nbsp;</span><span class="n">t</span><span class="">&nbsp;</span><span class="ow">in</span><span class="">&nbsp;</span><span class="n">threads</span><span class="p">:</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="k">for</span><span class="">&nbsp;</span><span class="n">t</span><span class="">&nbsp;</span><span class="ow">in</span><span class="">&nbsp;</span><span class="n">threads</span><span class="p">:</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                </ol>
+                <div class="copy-btn" data-content="复制" style="display: none;"></div>
+            </div>
+
+            <p>现在 pycharm里运行一遍，和正常情况一样，每一句 hello world单独占一行，没什么问题。</p>
+            <p>但是，现在我们用 idel再运行一遍这段代码，你会发现：</p>
+            <p><img alt="" src="./Test Markdown_files/8516750-a79ef30e81b8de31.PNG"></p>
+            <p>原本应该分成十行输出的 hello world现在变成了一行</p>
+            <p>更加糟糕的是 hello world竟然变成了 world hello (＃°Д°)</p>
+            <p>为什么会这样呢？</p>
+            <p>这是因为 pycharm的控制台是线程安全的，而 idel则没有做线程保护</p>
+            <p>所以当多个线程同时访问 idel的控制台时，就会出现争抢的现象</p>
+            <p>比如前一个线程刚打印完 hello，这时后面的线程就根本不管前面地线程还没打印完，直接上去就开始打印</p>
+            <p>这时就会出现单词顺序不对的问题，就像上面的例子一样</p>
+            <p>那什么时候会出现这样的问题呢？</p>
+            <p>其实问题的根源是<strong>多个线程同时访问了同一个对象，造成争抢，然后就会出问题</strong></p>
+            <p>比如多个线程同时操作一个文件、变量、列表等等</p>
+            <p>为了防止这样的问题产生，我们会给每一个可能被多个线程访问的资源加一个资源锁，这样同时就只能有一个线程访问了。</p>
+            <p>不过这样速度就会变慢一些，而且整体速度与资源锁的数量成反比。</p>
+            <p>所以要适当的使用资源锁，不要滥用，不然速度会变得很慢。</p>
+            <p>这里的资源锁指的就是 <code>threading.Lock()</code> ，它的一个实例就是一个资源锁对象</p>
+            <p>使用方法如下：</p>
+            <div class="code">
+                <ol class="num-container">
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="1"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="2"></div>
+                    </div>
+                    <div class="line-numbers">
+                        <div class="line-num" data-line-num="3"></div>
+                    </div>
+                </ol>
+                <ol class="code-container">
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="n">lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">(</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="k">print</span><span class="p">(</span><span class="s1">'</span><span class="s1">Hello&nbsp;World</span><span class="s1">'</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                    <li class="line">
+                        <div class="highlight-code">
+                            <div class="code-line"><span class="n">lock</span><span class="o">.</span><span class="n">release</span><span class="p">(</span><span class="p">)</span></div>
+                        </div>
+                    </li>
+                </ol>
+                <div class="copy-btn" data-content="复制"></div>
+            </div>
+
+            <p><code>lock.acquire()</code>申请上锁，<code>lock.release()</code> 解锁，在两者之间的代码就是线程安全的</p>
+            <p>现在，我们已经能够简单地使用多线程了</p>
+            <p>那么，下一篇我们就把 v1.0 版的简书爬虫升级到 v2.0版的多线程版简书爬虫。</p>
+            <p><strong>最后，觉得不错的话，记得关注、点赞、评论哦(❤ ω ❤)</strong></p>
+        </div>
+
+
+
+    </div>
+
+
+
+
+
+
+    <script src="./Test Markdown_files/jquery.slim.min.js.下载"></script>
+    <script src="./Test Markdown_files/bootstrap.bundle.min.js.下载"></script>
+    <script src="./Test Markdown_files/clipboard.min.js.下载"></script>
+    <script src="./Test Markdown_files/tools.js.下载"></script>
+    <script>
+        function move(target) {
+
+        }
+
+        function get_node(text) {
+            let li = document.createElement('li');
+            let span = document.createElement('span');
+
+            span.className = 'cntent-title';
+            span.innerText = text;
+
+            //添加点击事件 点击隐藏或显示当前标签下的 ul标签
+            span.onclick = function() {
+                let ul = this.parentElement.getElementsByTagName('ul')[0];
+                if (ul) {
+                    ul.style.display = ul.style.display == 'block' ? 'none' : 'block';
+                }
+            }
+            li.appendChild(span);
+
+            return li;
+        }
+
+        function genContent(l_list) {
+            let all_elements = document.getElementById('container').childNodes;
+            let node_list = [];
+            let top_l = Infinity;
+            let container = document.createElement('div');
+            container.className = 'content-container';
+
+            for (let i = 0; i < all_elements.length; i++) {
+                let l = l_list.indexOf(all_elements[i].localName) + 1;
+                if (l > 0) {
+                    let text = all_elements[i].innerText;
+                    let node = get_node(text);
+
+                    if (top_l >= l) {
+                        top_l = l - 1;
+                        node_list[top_l] = container;
+                    }
+
+                    if (node_list[l + 1]) {
+                        node_list[l + 1] = undefined;
+                    }
+
+                    if (!node_list[l]) {
+                        let ul = document.createElement('ul');
+                        ul.style.display = (l - 1 == top_l ? 'block' : 'none');
+                        ul.appendChild(node);
+                        node_list[l - 1].appendChild(ul);
+                        node_list[l - 1] = ul;
+                        node_list[l] = node;
+                    } else {
+                        node_list[l - 1].appendChild(node);
+                        node_list[l] = node;
+                    }
+                }
+            }
+            console.log(container);
+            document.body.appendChild(container);
+            return container;
+        }
+
+        window.onload = function() {
+            genContent(['h1', 'h2', 'h3', 'h4']);
+        }
+    </script>
+
+</body>
+
+</html>

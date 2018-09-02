@@ -1,0 +1,20 @@
+{% extends 'myblog/base.html' %}
+
+{% block title %}{{pagedata.post.title}}{% endblock %}
+
+{% block main %}
+
+<div class="row">
+    <div class="col text-center">
+        <h1>{{pagedata.post.title}}</h1>
+        <span class="d-block">Date:{{pagedata.post.get_format_date}}||{{pagedata.post.tags}}</span>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <p class="text-dark">{{pagedata.post.content}}</p>
+    </div>
+</div>
+
+{% endblock %}

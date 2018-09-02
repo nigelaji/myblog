@@ -1,0 +1,18 @@
+{% extends 'myblog/base.html' %}
+
+{% block title %}Markdown Test{% endblock %}
+
+{% block main %}
+
+<div class="row">
+    <div class="col">
+        <form method="POST" action="">
+            {% csrf_token %}
+            {{ form }}
+        </form>
+
+        {{ form.media }}
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="{% static 'myblog/css/style.css' %}">
+    <title>{% block title %}Test models{% endblock %}</title>
+    {% block style %}{% endblock %}
+</head>
+<body>
+
+
+<div class="container">
+    {% block header %}
+    <nav class="nav justify-content-end">
+        <a class="nav-link" href="{% url 'index' %}">Index</a>
+        <a href="{% url 'article_list' %}" class="nav-link">Articles</a>
+        <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+    </nav>
+    {% endblock %}
+    {% block main %}{% endblock %}
+    {% block footer %}{% endblock %}
+</div>
+
+
+
+{% block script %}{% endblock %}
+<script src="{% static 'bootstrap/js/jquery.slim.min.js' %}"></script>
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'myblog/js/clipboard.min.js' %}"></script>
+<script src="{% static 'myblog/js/tools.js' %}"></script>
+</body>
+</html>

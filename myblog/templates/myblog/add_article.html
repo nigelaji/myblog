@@ -1,0 +1,28 @@
+{% extends 'myblog/base.html' %}
+
+{% block title %}Add Article{% endblock %}
+
+{% block main %}
+
+<div class="row">
+    <div class="col">
+        <form action="{% url 'addArticle' %}" method="post">
+            {% csrf_token %}
+            {% for filed in pagedata.form %}
+            <div class="row my-3">
+                <div class="col">
+                    {{filed.label}}:
+                    {{filed}}
+                </div>
+            </div>
+            {% endfor %}
+            <div class="row my-3">
+                <div class="col">
+                    <button type="submit">提交</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
