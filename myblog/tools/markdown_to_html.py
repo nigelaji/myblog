@@ -57,12 +57,6 @@ class HtmlLiFormatter(Formatter):
         return cls
 
     def format(self, tokensource, outfile):
-        # lastval is a string we use for caching
-        # because it's possible that an lexer yields a number
-        # of consecutive tokens with the same token type.
-        # to minimize the size of the generated html markup we
-        # try to join the values of same-type tokens here
-
         get_line_num_tag = _line_num_tag_gen()
         line_start_tag = '<li class="line">'
         line_end_tag = '</li>'
